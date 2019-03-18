@@ -16,7 +16,7 @@ The [starter code](https://github.com/LambdaSchool/webapi-i-guided) for this pro
 
 Data for the API will be stored in memory using an array.
 
-## How to Clone Repository
+## How to Use this Repository
 
 - clone the [starter code](https://github.com/LambdaSchool/webapi-i-guided).
 - create a solution branch: `git checkout -b solution`.
@@ -24,6 +24,10 @@ Data for the API will be stored in memory using an array.
 - pull from this repository's master branch into the solution branch in your local folder `git pull solution master:solution --force`.
 
 A this point you should have a `master` branch pointing to the student's repository and a `solution` branch with the latest changes added to the solution repository.
+
+When making changes to the `solution` branch, commit the changes and type `git push solution solution:master` to push them to this repository.
+
+When making changes to the `master` branch, commit the changes and use `git push origin master` to push them to the student's repository.
 
 ## Create Basic Express Server
 
