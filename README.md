@@ -16,7 +16,7 @@ The [starter code](https://github.com/LambdaSchool/webapi-i-guided) for this pro
 
 Data for the API will be stored in memory using an array.
 
-## How to Use this Repository
+## How to Contribute
 
 - clone the [starter code](https://github.com/LambdaSchool/webapi-i-guided).
 - create a solution branch: `git checkout -b solution`.
