@@ -1,5 +1,6 @@
 # Web API I Guided Project
 
+
 Guided project for **Web API I** module.
 
 In this project we will learn how to create a very simple Web API using `Node.js` and `Express`, and cover the basics of `server-side routing` and using global `middleware`.
@@ -10,8 +11,9 @@ The code for the guided project will be written in a single file for simplicity.
 
 - [Postman](https://www.getpostman.com/downloads/) installed.
 
-## Starter Code
+## Project Setup
 
+<<<<<<< HEAD
 The [starter code](https://github.com/LambdaSchool/webapi-i-guided) for this project is configured to run the server by typing `yarn server` or `npm run server`. The server will restart automatically on changes.
 
 Data for the API will be stored in memory using an array.
@@ -319,3 +321,4 @@ server.put('/hubs/:id', (req, res) => {
 1. make a `GET` to `/hubs` and show that the hub was updated.
 
 **wait for students to catch up, use a `yes/no` poll to let students tell you when they are done**
+
