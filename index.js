@@ -1,7 +1,7 @@
 const express = require('express');
 
-// similar to: import db from './data/db';
-const db = require('./data/db.js');
+// similar to: import db from './data/hubs-model';
+const db = require('./data/hubs-model.js');
 
 const server = express();
 
@@ -25,15 +25,14 @@ server.get('/now', (req, res) => {
 });
 
 server.get('/hubs', (req, res) => {
-  db.hubs
-    .find()
+  db.find()
     .then(hubs => {
       res.status(200).json(hubs);
     })
-    .catch(({ code, message }) => {
-      res.status(code).json({
+    .catch(err => {
+      res.status(500).json({
         success: false,
-        message,
+        err,
       });
     });
 });
@@ -41,29 +40,34 @@ server.get('/hubs', (req, res) => {
 server.post('/hubs', (req, res) => {
   const hubInfo = req.body;
 
-  db.hubs
-    .add(hubInfo)
+  db.add(hubInfo)
     .then(hub => {
       res.status(201).json({ success: true, hub });
     })
-    .catch(({ code, message }) => {
-      res.status(code).json({
+    .catch(err => {
+      res.status(500).json({
         success: false,
-        message,
+        err,
       });
     });
 });
 
 server.delete('/hubs/:id', (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params;
 
-  db.hubs
-    .remove(id)
+  db.remove(id)
     .then(deleted => {
-      res.status(204).end();
+      if (deleted) {
+        res.status(204).json(deleted); 
+      } else {
+        res.status(404).json({
+          success: false,
+          message: 'I cannot find the hub you are looking for',
+        });
+      }
     })
-    .catch(({ code, message }) => {
-      res.status(code).json({
+    .catch(err => {
+      res.status(500).json({
         success: false,
         message,
       });
@@ -74,8 +78,7 @@ server.put('/hubs/:id', (req, res) => {
   const { id } = req.params;
   const changes = req.body;
 
-  db.hubs
-    .update(id, changes)
+  db.update(id, changes)
     .then(updated => {
       if (updated) {
         res.status(200).json({ success: true, updated });
@@ -86,17 +89,16 @@ server.put('/hubs/:id', (req, res) => {
         });
       }
     })
-    .catch(({ code, message }) => {
-      res.status(code).json({
+    .catch(err => {
+      res.status(500).json({
         success: false,
-        message,
+        err,
       });
     });
 });
 
 server.get('/hubs/:id', (req, res) => {
-  db.hubs
-    .findById(req.params.id)
+  db.findById(req.params.id)
     .then(hub => {
       if (hub) {
         res.status(200).json({
@@ -110,10 +112,10 @@ server.get('/hubs/:id', (req, res) => {
         });
       }
     })
-    .catch(({ code, message }) => {
-      res.status(code).json({
+    .catch(err => {
+      res.status(500).json({
         success: false,
-        message,
+        err,
       });
     });
 });
