@@ -110,15 +110,13 @@ Next, we'll learn how to retrieve (the `R` in CRUD) a list of hubs.
 
 ## Add `GET /hubs` Endpoint
 
-This endpoint will return a list of hubs as a JSON formatted array. The data comes from an **in-memory array that gets reset every time the server restarts**.
+This endpoint will return a list of hubs as a JSON formatted array. 
 
-The file `./data/db.js` works as a data layer. It has methods for manipulating the array of hubs. Please read through the code to get familiar with it.
+The file `./data/hubs-model.js` works as a data layer. It has methods for manipulating the database. Please read through the code to get familiar with it.
 
 **All methods from the data layer return a promise**.
 
-When an operation fails, the data layer returns an object with an HTTP status `code` and a `message`.
-
-1. require data layer: `const db = require('./data/db.js');`. No need to make change to this file.
+1. require data layer: `const db = require('./data/hubs-model.js');`. No need to make change to this file.
 2. add `GET /hubs` endpoint:
 
 ```js
@@ -126,19 +124,17 @@ server.get('/hubs', (req, res) => {
   // .hubs.find() returns a promise that resolves to a list of existing hubs
   // it fails if the server's clock seconds hold an odd value. Done to simulate failures.
   // (ie. fails at 9:02:03 and 9:02:05, succeeds at 9:02:02 and 9:02:04)
-  db.hubs
-    .find()
+  db.find()
     .then(hubs => {
       // introduce res.status() and res.json()
       res.status(200).json(hubs);
     })
-    .catch(({ code, message }) => {
+    .catch(err => {
       // we ran into an error getting the hubs
-      // notice we are destructuring the error sent back by the data layer
-      // alternatively .catch(err => { res.status(err.code).json({ success: true, message: err.message })});
-      res.status(code).json({
+      // use the catch-all 500 status code
+      res.status(500).json({
         success: false,
-        message,
+        err,
       });
     });
 });
@@ -155,7 +151,7 @@ Next, we'll learn how to add (the `C` in CRUD) a new hub.
 
 ## Add `POST /hubs` Endpoint
 
-This endpoint expects an object with the `name` for the hub and returns the newly created hub. The data layer adds a new `id` and `createdAt` properties automatically to every new hub.
+This endpoint expects an object with the `name` for the hub and returns the newly created hub. The data layer adds a new `id`, `createdAt`, and `updated_at` properties automatically to every new hub.
 
 We can easily make GET request with a web browser, but other HTTP Methods like POST we need a REST client, we will use [Postman](https://www.getpostman.com/downloads/)
 
@@ -168,19 +164,17 @@ server.post('/hubs', (req, res) => {
   const hubInfo = req.body; // needs use express.json() middleware
 
   // we are not validating the data sent by the client for now, to keep the code simpler, but we should be validating data.
-  db.hubs
-    .add(hubInfo)
+  db.add(hubInfo)
     .then(hub => {
       // hub was added successfully
       res.status(201).json({ success: true, hub });
     })
-    .catch(({ code, message }) => {
-      // we ran into an error adding the hub
-      // notice we are destructuring the error sent back by the data layer
-      // alternatively .catch(err => { res.status(err.code).json({ success: true, message: err.message })});
-      res.status(code).json({
+    .catch(err => {
+      // we ran into an error getting the hubs
+      // use the catch-all 500 status code
+      res.status(500).json({
         success: false,
-        message,
+        err,
       });
     });
 });
@@ -191,7 +185,7 @@ Explain how to make POST requests using postman. Remember to **set body to raw a
 1. make a POST request with `{ "name": "db 1" }` as the body.
 1. we should get an error because express doesn't know how to parse JSON from the body.
 1. add `express.json()` middleware and explain what it does. Tell students we'll know more about how `middleware` works in the _middleware module_.
-1. send the POST request again. Note that the hub we get back has `id` and `createdAt` fields. This is similar to what happens when using a real database.
+1. send the POST request again. Note that the hub we get back has `id`, `createdAt`, and `updated_at` fields. 
 
 **wait for students to catch up, use a `yes/no` poll to let students tell you when they are done**
 
@@ -204,23 +198,30 @@ Add the endpoint:
 ```js
 server.delete('/hubs/:id', (req, res) => {
   // introduce req.params
-  const id = req.params.id;
+  const { id }  = req.params;
 
-  db.hubs
-    .remove(id)
+  db.remove(id)
     .then(deleted => {
-      // the data layer returns the deleted record, but we won't use it
-      // explain .end(). It ends the request and sends a response with the specified status code
+      // the data layer returns the deleted record
+      // we'll use it to check if the id provided is valid
+      
+     if (deleted) {
+       // explain .end(). It ends the request and sends a response with the specified status code
       // 204 (no content) is commonly used for DELETE as there is no need to send anything back.
-      res.status(204).end();
+        res.status(204).end();
+      } else {
+        res.status(404).json({
+          success: false,
+          message: 'I cannot find the hub you are looking for',
+        });
+      }
     })
-    .catch(({ code, message }) => {
-      // we ran into an error adding the hub
-      // notice we are destructuring the error sent back by the data layer
-      // alternatively .catch(err => { res.status(err.code).json({ success: true, message: err.message })});
-      res.status(code).json({
+    .catch(err => {
+      // we ran into an error getting the hubs
+      // use the catch-all 500 status code
+      res.status(500).json({
         success: false,
-        message,
+        err,
       });
     });
 });
@@ -239,15 +240,14 @@ Time for students to practice what they have learned.
 
 ### You Do (estimated 10m to complete)
 
-1. add `GET /hubs/:id` Endpoint that uses `db.hubs.findById(id)` and returns the hub with the provided `id` if one is found.
+1. add `GET /hubs/:id` Endpoint that uses `db.findById(id)` and returns the hub with the provided `id` if one is found.
 1. if the hub is not found for that `id`, return status code `404` and this object: `{ success: false, message: 'We couldn't find a hub with the provided id' }`.
 
 One possible solution:
 
 ```js
 server.get('/hubs/:id', (req, res) => {
-  db.hubs
-    .findById(req.params.id)
+  db.findById(req.params.id)
     .then(hub => {
       if (hub) {
         res.status(200).json({
@@ -261,10 +261,12 @@ server.get('/hubs/:id', (req, res) => {
         });
       }
     })
-    .catch(({ code, message }) => {
-      res.status(code).json({
+   .catch(err => {
+      // we ran into an error getting the hubs
+      // use the catch-all 500 status code
+      res.status(500).json({
         success: false,
-        message,
+        err,
       });
     });
 });
@@ -291,8 +293,7 @@ server.put('/hubs/:id', (req, res) => {
   const { id } = req.params;
   const changes = req.body;
 
-  db.hubs
-    .update(id, changes)
+  db.update(id, changes)
     .then(updated => {
       if (updated) {
         res.status(200).json({ success: true, updated });
@@ -303,10 +304,12 @@ server.put('/hubs/:id', (req, res) => {
         });
       }
     })
-    .catch(({ code, message }) => {
-      res.status(code).json({
+    .catch(err => {
+      // we ran into an error getting the hubs
+      // use the catch-all 500 status code
+      res.status(500).json({
         success: false,
-        message,
+        err,
       });
     });
 });

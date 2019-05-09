@@ -58,10 +58,7 @@ server.delete('/hubs/:id', (req, res) => {
   db.remove(id)
     .then(deleted => {
       if (deleted) {
-        res.status(200).json({
-          success: true,
-          deleted
-        }); 
+        res.status(204).end();
       } else {
         res.status(404).json({
           success: false,
